@@ -37,6 +37,10 @@ class ArxivPaper:
     @property
     def pdf_url(self) -> str:
         return self._paper.pdf_url
+
+    @property
+    def abs_url(self) -> str:
+        return f"Arxiv URL: https://arxiv.org/abs/{self.arxiv_id}"
     
     @cached_property
     def code_url(self) -> Optional[str]:
