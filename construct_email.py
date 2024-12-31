@@ -56,9 +56,13 @@ def get_empty_html():
   """
   return block_template
 
-def get_block_html(title:str, authors:str, rate:str,arxiv_id:str, abstract:str, pdf_url:str, code_url:str=None, affiliations:str=None):
-    abstract_url = f"https://arxiv.org/abs/{arxiv_id}"
+def get_block_html(title:str, authors:str, rate:str, arxiv_id:str, abstract:str, pdf_url:str, code_url:str=None, affiliations:str=None):
+    # 生成代码按钮 HTML
     code = f'<a href="{code_url}" style="display: inline-block; text-decoration: none; font-size: 14px; font-weight: bold; color: #fff; background-color: #5bc0de; padding: 8px 16px; border-radius: 4px; margin-left: 8px;">Code</a>' if code_url else ''
+    
+    # 生成 abstract 链接
+    abstract_url = f"https://arxiv.org/abs/{arxiv_id}"
+    
     block_template = """
     <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-family: Arial, sans-serif; border: 1px solid #ddd; border-radius: 8px; padding: 16px; background-color: #f9f9f9;">
     <tr>
@@ -98,8 +102,17 @@ def get_block_html(title:str, authors:str, rate:str,arxiv_id:str, abstract:str, 
     </tr>
 </table>
 """
-    return block_template.format(title=title, authors=authors,rate=rate,arxiv_id=arxiv_id, abstract=abstract, pdf_url=pdf_url, code=code, affiliations=affiliations)
-
+    return block_template.format(
+        title=title, 
+        authors=authors,
+        rate=rate,
+        arxiv_id=arxiv_id, 
+        abstract=abstract, 
+        pdf_url=pdf_url, 
+        abstract_url=abstract_url,  # 添加这个参数
+        code=code, 
+        affiliations=affiliations
+    )
 def get_stars(score:float):
     full_star = '<span class="full-star">⭐</span>'
     half_star = '<span class="half-star">⭐</span>'
