@@ -101,24 +101,39 @@ class ArxivPaper:
             file_contents = {}
             for t in tex_files:
                 f = tar.extractfile(t)
-                content = f.read().decode('utf-8')
-                #remove comments
+                content = f.read()
+                try:
+                    # 首先尝试 UTF-8
+                    content = content.decode('utf-8')
+                except UnicodeDecodeError:
+                    try:
+                        # 尝试 latin-1
+                        content = content.decode('latin-1')
+                    except UnicodeDecodeError:
+                        # 最后使用替换模式
+                        content = content.decode('utf-8', errors='replace')
+                        logger.warning(f"Encoding issues in {t} of {self.arxiv_id}, some characters might be replaced")
+                
+                # remove comments
                 content = re.sub(r'%.*\n', '\n', content)
                 content = re.sub(r'\\begin{comment}.*?\\end{comment}', '', content, flags=re.DOTALL)
                 content = re.sub(r'\\iffalse.*?\\fi', '', content, flags=re.DOTALL)
-                #remove redundant \n
+                
+                # remove redundant \n
                 content = re.sub(r'\n+', '\n', content)
                 content = re.sub(r'\\\\', '', content)
-                #remove consecutive spaces
+                
+                # remove consecutive spaces
                 content = re.sub(r'[ \t\r\f]{3,}', ' ', content)
+                
                 if main_tex is None and re.search(r'\\begin\{document\}', content):
                     main_tex = t
                     logger.debug(f"Choose {t} as main tex file of {self.arxiv_id}")
                 file_contents[t] = content
-            
+
             if main_tex is not None:
                 main_source:str = file_contents[main_tex]
-                #find and replace all included sub-files
+                # find and replace all included sub-files
                 include_files = re.findall(r'\\input\{(.+?)\}', main_source) + re.findall(r'\\include\{(.+?)\}', main_source)
                 for f in include_files:
                     if not f.endswith('.tex'):
@@ -126,11 +141,14 @@ class ArxivPaper:
                     else:
                         file_name = f
                     main_source = main_source.replace(f'\\input{{{f}}}', file_contents.get(file_name, ''))
+                    main_source = main_source.replace(f'\\include{{{f}}}', file_contents.get(file_name, ''))
                 file_contents["all"] = main_source
             else:
                 logger.debug(f"Failed to find main tex file of {self.arxiv_id}: No tex file containing the document block.")
                 file_contents["all"] = None
+
         return file_contents
+    
     
     @cached_property
     def tldr(self) -> str:
